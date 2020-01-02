@@ -1,0 +1,3 @@
+hiredis
+aioredis
+pydantic
