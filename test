@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+local_dir=`dirname "$0"`
+
+PYTHONPATH=$local_dir/src pytest \
+  --cov-report html:$local_dir/test_output \
+  --cov=$local_dir/src \
+  -o cache_dir=$local_dir/.my_cache_dir \
+  $local_dir/tests/unit \
+  && xdg-open $local_dir/test_output/index.html
