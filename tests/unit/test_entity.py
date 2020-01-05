@@ -1,10 +1,6 @@
 import pytest
 
-from redgraph import redis
-
-
-def test__key():
-    assert redis._key(b"a", b"b", b"c") == b"a:b:c"
+from redgraph import entity
 
 
 def test__entity():
@@ -24,7 +20,7 @@ def test__entity():
         b"li",
         b"[1, 2, 3]",
     ]
-    assert expected == redis._entity(
+    assert expected == entity._entity_list(
         dict(
             i=5, f=3.14, b=False, n=None, s="four", d=dict(a="a", b="b"), li=[1, 2, 3],
         )
@@ -34,6 +30,6 @@ def test__entity():
         pass
 
     with pytest.raises(TypeError):
-        redis._entity(dict(a=NotAllowed()))
+        entity._entity_list(dict(a=NotAllowed()))
     # with pytest.raises(TypeError):
-    #     redis._entity({NotAllowed(): 1})
+    #     entity._entity({NotAllowed(): 1})

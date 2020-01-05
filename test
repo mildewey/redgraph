@@ -25,3 +25,8 @@ PYTHONPATH=$local_dir/src pytest \
   --cov=$local_dir/src \
   -o cache_dir=$local_dir/.my_cache_dir \
   $tests
+
+if [ $unit != 1 ]; then
+  echo "Taking down Redis"
+  docker-compose -f $local_dir/tests/docker-compose.yml down
+fi
