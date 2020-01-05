@@ -1,5 +1,6 @@
 import uuid
 import asyncio
+from typing import Optional, List
 
 from redgraph import redis
 
@@ -22,5 +23,19 @@ async def relate(
             tr.sadd(_key(b"po", predicate.bytes), object.bytes),
             tr.sadd(_key(b"op", object.bytes), predicate.bytes),
             tr.sadd(_key(b"pos", predicate.bytes, object.bytes), subject.bytes),
+            tr.sadd(b"subjects", subject.bytes),
+            tr.sadd(b"predicates", predicate.bytes),
+            tr.sadd(b"objects", object.bytes),
         ]
     await asyncio.gather(*futures)
+
+
+async def subjects(
+    conn: redis.Connection,
+    predicates: Optional[List[uuid.UUID]] = None,
+    objects: Optional[List[uuid.UUID]] = None,
+) -> List[uuid.UUID]:
+    if predicates is None and objects is None:
+        members = await conn.smembers(b"subjects")
+
+    return [uuid.UUID(bytes=member) for member in members]

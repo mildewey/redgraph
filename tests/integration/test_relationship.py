@@ -14,3 +14,6 @@ async def test_relate(redis_conn):
     assert await redis_conn.sismember(
         relationship._key(b"spo", subject.bytes, predicate.bytes), object.bytes
     )
+    subjects = await relationship.subjects(redis_conn)
+    assert isinstance(subjects, list)
+    assert subject in subjects
