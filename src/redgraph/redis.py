@@ -1,10 +1,8 @@
 from contextlib import asynccontextmanager
-from typing import Union
 
 import aioredis
 
-Connection = Union[aioredis.ConnectionsPool, aioredis.RedisConnection]
-Transaction = Union[aioredis.commands.MultiExec]
+from redgraph.types import Connection, Transaction
 
 
 @asynccontextmanager
