@@ -7,9 +7,9 @@ import aioredis
 ID = Union[uuid.UUID]
 Handle = bytes
 
-Key = Union[str, bytes]
-Value = Union[List["Value"], "Document", str, bytes, int, float, bool, None]
-Document = Mapping[Key, Value]
+Key = Union[str, bytes, int]
+Primitive = Union[str, bytes, int, float, bool, None]
+Document = Mapping[Key, Primitive]
 
 Connection = Union[aioredis.ConnectionsPool, aioredis.RedisConnection]
 Transaction = Union[aioredis.commands.MultiExec]
