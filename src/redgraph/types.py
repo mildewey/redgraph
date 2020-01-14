@@ -1,30 +1,24 @@
 import uuid
-from typing import Union, List, Mapping
-from functools import singledispatch
+from typing import Union, List, Mapping, Tuple
+from dataclasses import dataclass
 
 import aioredis
 
-ID = Union[uuid.UUID]
 Handle = bytes
-
-Key = Union[str, bytes, int]
-Primitive = Union[str, bytes, int, float, bool, None]
-Document = Mapping[Key, Primitive]
+ID = Union[uuid.UUID]
 
 Connection = Union[aioredis.ConnectionsPool, aioredis.RedisConnection]
 Transaction = Union[aioredis.commands.MultiExec]
+Redis = Union[Connection, Transaction]
+
+Key = Union[str, bytes, int]
+Primitive = Union[str, bytes, int, float, bool, None]
+Document = Mapping[Key, "Value"]
+Value = Union[Document, List[Union[Document, Primitive]], Primitive]
+Index = List[Key]
 
 
-@singledispatch
-def handle(*parts) -> Handle:
-    return b":".join([bytes(str(part), "utf-8") for part in parts])
-
-
-@handle.register
-def _(*parts: bytes) -> Handle:
-    return b":".join(parts)
-
-
-@handle.register
-def _(*parts: str) -> Handle:
-    return b":".join([bytes(part, "utf-8") for part in parts])
+@dataclass
+class Type:
+    name: str
+    indices: List[Index]

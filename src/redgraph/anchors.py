@@ -2,7 +2,8 @@ import uuid
 from typing import List, Optional, AnyStr
 
 from redgraph import redis, graph
-from redgraph.types import ID, handle
+from redgraph.common import handle
+from redgraph.types import ID
 
 
 async def add(conn: redis.Connection, anchor: str, *entities: ID) -> int:

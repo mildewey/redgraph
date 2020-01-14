@@ -2,19 +2,18 @@ import json
 import pytest
 
 from redgraph import entity
+from redgraph.types import Type
 
 
 @pytest.mark.asyncio
 async def test_crud(redis_conn):
-    key = await entity.create(redis_conn, json.dumps(dict(a=5, b=6)))
-    raw_vals = await entity.read(redis_conn, key)
-    vals = json.loads(raw_vals)
+    key = await entity.create(redis_conn, dict(a=5, b=6))
+    vals = await entity.read(redis_conn, key)
     assert vals["a"] == 5
     assert vals["b"] == 6
 
-    await entity.update(redis_conn, key, json.dumps(dict(a=3, c=55)))
-    raw_vals = await entity.read(redis_conn, key)
-    vals = json.loads(raw_vals)
+    await entity.update(redis_conn, key, dict(a=3, c=55))
+    vals = await entity.read(redis_conn, key)
     assert vals["a"] == 3
     assert vals["c"] == 55
     assert "b" not in vals

@@ -3,7 +3,8 @@ import asyncio
 from typing import List
 
 from redgraph import redis
-from redgraph.types import ID, Handle, handle
+from redgraph.common import handle
+from redgraph.types import ID
 
 
 async def relate(
