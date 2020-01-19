@@ -11,14 +11,14 @@ Connection = Union[aioredis.ConnectionsPool, aioredis.RedisConnection]
 Transaction = Union[aioredis.commands.MultiExec]
 Redis = Union[Connection, Transaction]
 
-Key = Union[str, bytes, int]
+Key = Union[str, int]
 Primitive = Union[str, bytes, int, float, bool, None]
 Document = Mapping[Key, "Value"]
 Value = Union[Document, List[Union[Document, Primitive]], Primitive]
-Index = List[Key]
+Field = List[Key]
 
 
 @dataclass
 class Type:
     name: str
-    indices: List[Index]
+    indices: List[Field]

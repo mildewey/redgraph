@@ -5,42 +5,18 @@ from functools import singledispatch
 from typing import Optional
 
 from redgraph import redis, anchors
-from redgraph.common import handle
+from redgraph.common import handle, serialize, deserialize
 from redgraph.types import (
     Document,
     Type,
-    Key,
     ID,
     Connection,
-    Union,
     List,
-    Index,
+    Field,
     Value,
 )
 
 logger = logging.getLogger("redgraph")
-
-
-class BadTypeError(Exception):
-    pass
-
-
-def _extract(entity: Document, index: Index) -> Value:
-    try:
-        return reduce(lambda e, i: e[i], index, entity)
-    except Exception as e:
-        logger.exception(e)
-        msg = f"Unable to extract value for index {index} from entity {entity}"
-        logger.error(msg)
-        raise BadTypeError(msg)
-
-
-def _serialize(val: Value) -> bytes:
-    return bytes(json.dumps(val), "utf-8")
-
-
-def _deserialize(val: str) -> Value:
-    return json.loads(val)
 
 
 def _extract_all(entity: Document, type: Type, type_check: bool) -> List[bytes]:
@@ -53,7 +29,7 @@ def _extract_all(entity: Document, type: Type, type_check: bool) -> List[bytes]:
                 raise e
         else:
             indexed.append(handle("index", *index))
-            indexed.append(_serialize(val))
+            indexed.append(serialize(val))
     return indexed
 
 
@@ -72,9 +48,9 @@ async def _set(
     await conn.hmset(
         id.bytes,
         handle("entity"),
-        _serialize(entity),
+        serialize(entity),
         handle("type", "name"),
-        _serialize(type.name if type is not None else None),
+        serialize(type.name if type is not None else None),
         *indexed,
     )
 
@@ -85,13 +61,13 @@ async def create(conn: Connection, entity: Document, type: Optional[Type] = None
     return id
 
 
-async def read(conn: Connection, id: ID, index: Optional[Index] = None) -> Value:
+async def read(conn: Connection, id: ID, index: Optional[Field] = None) -> Value:
     if index is None:
         raw = await conn.hget(id.bytes, handle("entity"), encoding="utf-8")
     else:
         raw = await conn.hget(id.bytes, handle("index", *index), encoding="utf-8")
     if raw is not None:
-        return _deserialize(raw)
+        return deserialize(raw)
     return None
 
 
