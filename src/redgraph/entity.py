@@ -3,13 +3,17 @@ import uuid
 import logging
 from functools import singledispatch
 from typing import Optional
+from asyncio import Future
 
 from redgraph import redis, anchors
+from redgraph.redis import awaitable
 from redgraph.common import handle, serialize, deserialize, extract, MissingFieldError
 from redgraph.types import (
     Document,
     ID,
     Connection,
+    Transaction,
+    Future,
     List,
     Key,
     Field,
@@ -31,18 +35,11 @@ def _extract_all(entity: Document, *indices: Key) -> List[bytes]:
     return indexed
 
 
-async def update(conn: Connection, id: ID, entity: Document, *indices: Key) -> None:
+@awaitable
+def set(conn: Transaction, id: ID, entity: Document, *indices: Key) -> List[Future]:
     indexed = _extract_all(entity, *indices)
 
-    await conn.hmset(
-        id.bytes, handle("entity"), serialize(entity), *indexed,
-    )
-
-
-async def create(conn: Connection, entity: Document, *indices: Key) -> ID:
-    id = uuid.uuid1()
-    await update(conn, id, entity, *indices)
-    return id
+    return [conn.hmset(id.bytes, handle("entity"), serialize(entity), *indexed)]
 
 
 async def read(conn: Connection, id: ID) -> Value:
@@ -52,13 +49,14 @@ async def read(conn: Connection, id: ID) -> Value:
     return None
 
 
-async def replace(conn: Connection, id: ID, entity: Document, *indices: Key) -> None:
-    await delete(conn, id)
-    await update(conn, id, entity, *indices)
+@awaitable
+def replace(conn: Transaction, id: ID, entity: Document, *indices: Key) -> List[Future]:
+    return [*delete(conn, id), *set(conn, id, entity, *indices)]
 
 
-async def delete(conn: Connection, id: ID) -> None:
-    await conn.delete(id.bytes)
+@awaitable
+def delete(conn: Connection, id: ID) -> None:
+    return [conn.delete(id.bytes)]
 
 
 async def field(conn: Connection, id: ID, *index: Key) -> Value:

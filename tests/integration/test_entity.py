@@ -1,13 +1,16 @@
-import json
+import uuid
+import asyncio
+
 import pytest
 
-from redgraph import entity
+from redgraph import entity, redis
 from redgraph.common import handle, MissingFieldError
 
 
 @pytest.mark.asyncio
 async def test_crud(redis_conn):
-    key = await entity.create(redis_conn, dict(a=5, b=6))
+    key = uuid.uuid1()
+    await entity.set(redis_conn, key, dict(a=5, b=6))
     vals = await entity.read(redis_conn, key)
     assert vals["a"] == 5
     assert vals["b"] == 6
@@ -33,8 +36,10 @@ async def test_field(redis_conn):
         e=1.4,
         index=dict(f="hello", g=dict(h="goodbye"), i=[1, 2, 3, 4]),
     )
-    key = await entity.create(
+    key = uuid.uuid1()
+    await entity.set(
         redis_conn,
+        key,
         expected,
         ["index"],
         ["index", "f"],
@@ -83,3 +88,9 @@ async def test_field(redis_conn):
     assert expected["index"]["i"][2] == await entity.field(
         redis_conn, key, "index", "i", 2
     )
+
+    async with redis.transaction(redis_conn) as tr:
+        d = entity.delete(tr, key)
+    await asyncio.gather(*d)
+    with pytest.raises(MissingFieldError):
+        await entity.field(redis_conn, key, "index")

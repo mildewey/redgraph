@@ -1,9 +1,10 @@
 import asyncio
+from functools import singledispatch
 from contextlib import asynccontextmanager
 
 import aioredis
 
-from redgraph.types import Connection, Transaction
+from redgraph.types import Connection, Transaction, Future, List
 
 
 @asynccontextmanager
@@ -30,3 +31,17 @@ async def transaction(redis: Connection) -> Transaction:
     tr = redis.multi_exec()
     yield tr
     await tr.execute()
+
+
+def awaitable(func):
+    @singledispatch
+    async def wrapper(conn: Connection, *args, **kwargs) -> None:
+        async with transaction(conn) as tr:
+            futures = func(tr, *args, **kwargs)
+        asyncio.gather(*futures)
+
+    @wrapper.register
+    def _(conn: Transaction, *args, **kwargs) -> List[Future]:
+        return func(conn, *args, **kwargs)
+
+    return wrapper
