@@ -2,7 +2,6 @@ import json
 import pytest
 
 from redgraph import entity
-from redgraph.types import Type
 
 
 @pytest.mark.asyncio

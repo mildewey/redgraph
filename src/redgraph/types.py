@@ -16,9 +16,3 @@ Primitive = Union[str, bytes, int, float, bool, None]
 Document = Mapping[Key, "Value"]
 Value = Union[Document, List[Union[Document, Primitive]], Primitive]
 Field = List[Key]
-
-
-@dataclass
-class Type:
-    name: str
-    indices: List[Field]

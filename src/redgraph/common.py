@@ -1,5 +1,6 @@
 import uuid
 import json
+import logging
 from functools import singledispatch, reduce
 from typing import Union, List, Mapping
 
@@ -8,7 +9,10 @@ import aioredis
 from redgraph.types import Handle, Value, Document, Field, Key
 
 
-class BadTypeError(Exception):
+logger = logging.getLogger("redgraph")
+
+
+class MissingFieldError(Exception):
     pass
 
 
@@ -42,4 +46,4 @@ def extract(entity: Document, *keys: Key) -> Value:
         msg = f"Unable to extract value for keys {'.'.join([str(key) for key in keys])} from entity {entity}"
         logger.warning(msg)
         logger.exception(e)
-        raise BadTypeError(msg)
+        raise MissingFieldError(msg)
