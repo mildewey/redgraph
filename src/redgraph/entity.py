@@ -28,15 +28,11 @@ def _extract_all(entity: Document, *indices: Key) -> List[bytes]:
             continue
         indexed.append(handle("index", *index))
         indexed.append(serialize(val))
-    logger.info(indexed)
     return indexed
 
 
 async def _set(conn: Connection, id: ID, entity: Document, *indices: Key) -> None:
-    if type is not None:
-        indexed = _extract_all(entity, *indices)
-    else:
-        indexed = []
+    indexed = _extract_all(entity, *indices)
 
     await conn.hmset(
         id.bytes, handle("entity"), serialize(entity), *indexed,
@@ -58,11 +54,11 @@ async def read(conn: Connection, id: ID) -> Value:
 
 async def replace(conn: Connection, id: ID, entity: Document, *indices: Key) -> None:
     await delete(conn, id)
-    await _set(conn, id, entity, type)
+    await _set(conn, id, entity, *indices)
 
 
 async def update(conn: Connection, id: ID, entity: Document, *indices: Key) -> None:
-    await _set(conn, id, entity, type)
+    await _set(conn, id, entity, *indices)
 
 
 async def delete(conn: Connection, id: ID) -> None:
