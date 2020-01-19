@@ -11,7 +11,7 @@ async def test_crud(redis_conn):
     assert vals["a"] == 5
     assert vals["b"] == 6
 
-    await entity.update(redis_conn, key, dict(a=3, c=55))
+    await entity.replace(redis_conn, key, dict(a=3, c=55))
     vals = await entity.read(redis_conn, key)
     assert vals["a"] == 3
     assert vals["c"] == 55
