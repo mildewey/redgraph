@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional, AnyStr
+from typing import List
 
 from redgraph import redis, graph
 from redgraph.common import handle
@@ -82,7 +82,7 @@ async def members(conn: redis.Connection, anchor: str) -> List[ID]:
     return [uuid.UUID(bytes=member) for member in members]
 
 
-async def is_member(conn: redis.Connection, anchor: str, entity: ID) -> List[ID]:
+async def is_member(conn: redis.Connection, anchor: str, entity: ID) -> bool:
     mem = await conn.sismember(handle("anchor", anchor), entity.bytes)
     return bool(mem)
 

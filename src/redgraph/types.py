@@ -13,3 +13,8 @@ Transaction = Union[aioredis.commands.MultiExec]
 Future = asyncio.Future
 
 Redis = Union[Connection, Transaction]
+
+Key = Union[str, int]
+Primitive = Union[str, bytes, int, float, bool, None]
+Document = Mapping[Key, "Value"]
+Value = Union[Document, List[Union[Document, Primitive]], Primitive]
