@@ -1,10 +1,11 @@
 import asyncio
 from functools import singledispatch
 from contextlib import asynccontextmanager
+from typing import Callable
 
 import aioredis
 
-from redgraph.types import Connection, Transaction, Future, List
+from redgraph.types import Connection, Transaction, Pipeline, Future, List
 
 
 @asynccontextmanager
@@ -33,7 +34,14 @@ async def transaction(redis: Connection) -> Transaction:
     await tr.execute()
 
 
-def awaitable(func):
+@asynccontextmanager
+async def pipeline(redis: Connection) -> Pipeline:
+    pipe = redis.pipeline()
+    yield pipe
+    await pipe.execute()
+
+
+def awaitable(func: Callable):
     @singledispatch
     async def wrapper(conn: Connection, *args, **kwargs) -> None:
         async with transaction(conn) as tr:

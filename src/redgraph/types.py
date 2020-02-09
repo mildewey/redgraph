@@ -10,6 +10,7 @@ ID = Union[uuid.UUID]
 
 Connection = Union[aioredis.ConnectionsPool, aioredis.RedisConnection]
 Transaction = Union[aioredis.commands.MultiExec]
+Pipeline = Union[aioredis.commands.Pipeline]
 Future = asyncio.Future
 
 Redis = Union[Connection, Transaction]
