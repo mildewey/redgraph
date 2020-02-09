@@ -4,71 +4,76 @@ from typing import List, Optional, AnyStr
 from redgraph import redis, graph
 from redgraph.common import handle
 from redgraph.types import ID
+from redgraph.redis import awaitable
 
 
-async def add(conn: redis.Connection, anchor: str, *entities: ID) -> int:
+@awaitable
+def add(conn: redis.Transaction, anchor: str, *entities: ID) -> int:
     key = handle("anchor", anchor)
     if len(entities) != 0:
-        return await conn.sadd(key, *[ent.bytes for ent in entities])
-    return 0
+        return [conn.sadd(key, *[ent.bytes for ent in entities])]
+    return []
 
 
-async def remove(conn: redis.Connection, anchor: str, *entities: ID) -> int:
+@awaitable
+def remove(conn: redis.Transaction, anchor: str, *entities: ID) -> int:
     key = handle("anchor", anchor)
     if len(entities) != 0:
-        return await conn.srem(key, *[ent.bytes for ent in entities])
-    return 0
+        return [conn.srem(key, *[ent.bytes for ent in entities])]
+    return []
 
 
-async def count(conn: redis.Connection, anchor: str) -> int:
-    key = handle("anchor", anchor)
-    return await conn.scard(key)
+@awaitable
+def unionstore(
+    conn: redis.Transaction, store: str, *anchors: str, overwrite: bool = True
+):
+    unite_anchors = [handle("anchor", anchor) for anchor in anchors]
+    new_anchor = handle("anchor", store)
+    if not overwrite:
+        unite_anchors.append(new_anchor)
+    return [conn.sunionstore(new_anchor, *unite_anchors)]
 
 
-async def union(
-    conn: redis.Connection, *anchors: str, store: Optional[str] = None
-) -> List[ID]:
+@awaitable
+def interstore(
+    conn: redis.Transaction, store: str, *anchors: str, overwrite: bool = True
+):
+    intersect_anchors = [handle("anchor", anchor) for anchor in anchors]
+    new_anchor = handle("anchor", store)
+    if not overwrite:
+        intersect_anchors.append(new_anchor)
+    return [conn.sinterstore(new_anchor, *intersect_anchors)]
+
+
+@awaitable
+def diffstore(
+    conn: redis.Transaction, store: str, *anchors: str, overwrite: bool = True
+):
+    diff_anchors = [handle("anchor", anchor) for anchor in anchors]
+    new_anchor = handle("anchor", store)
+    if not overwrite:
+        diff_anchors.append(new_anchor)
+    return [conn.sdiffstore(new_anchor, *diff_anchors)]
+
+
+async def union(conn: redis.Connection, *anchors: str) -> List[ID]:
     if len(anchors) == 0:
         return []
-    if store is None:
-        members = await conn.sunion(*[handle("anchor", anchor) for anchor in anchors])
-    else:
-        await conn.sunionstore(
-            handle("anchor", store), *[handle("anchor", anchor) for anchor in anchors]
-        )
-        members = await conn.smembers(handle("anchor", store))
+    members = await conn.sunion(*[handle("anchor", anchor) for anchor in anchors])
     return [uuid.UUID(bytes=member) for member in members]
 
 
-async def intersection(
-    conn: redis.Connection, *anchors: str, store: Optional[str] = None
-) -> List[ID]:
+async def intersection(conn: redis.Connection, *anchors: str) -> List[ID]:
     if len(anchors) == 0:
         return []
-    if store is None:
-        members = await conn.sinter(*[handle("anchor", anchor) for anchor in anchors])
-    else:
-        await conn.sinterstore(
-            handle("anchor", store), *[handle("anchor", anchor) for anchor in anchors]
-        )
-        members = await conn.smembers(handle("anchor", store))
+    members = await conn.sinter(*[handle("anchor", anchor) for anchor in anchors])
     return [uuid.UUID(bytes=member) for member in members]
 
 
-async def difference(
-    conn: redis.Connection, base: str, *remove: str, store: Optional[str] = None
-) -> List[ID]:
-    if store is None:
-        members = await conn.sdiff(
-            handle("anchor", base), *[handle("anchor", key) for key in remove]
-        )
-    else:
-        await conn.sdiffstore(
-            handle("anchor", store),
-            handle("anchor", base),
-            *[handle("anchor", key) for key in remove],
-        )
-        members = await conn.smembers(handle("anchor", store))
+async def difference(conn: redis.Connection, base: str, *remove: str) -> List[ID]:
+    members = await conn.sdiff(
+        handle("anchor", base), *[handle("anchor", key) for key in remove]
+    )
     return [uuid.UUID(bytes=member) for member in members]
 
 
@@ -80,3 +85,8 @@ async def members(conn: redis.Connection, anchor: str) -> List[ID]:
 async def is_member(conn: redis.Connection, anchor: str, entity: ID) -> List[ID]:
     mem = await conn.sismember(handle("anchor", anchor), entity.bytes)
     return bool(mem)
+
+
+async def count(conn: redis.Connection, anchor: str) -> int:
+    key = handle("anchor", anchor)
+    return await conn.scard(key)

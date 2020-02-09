@@ -11,8 +11,8 @@ async def test_add_rem(redis_conn):
     c = uuid.uuid1()
     d = uuid.uuid1()
     anchor = "#test_add_rem"
-    assert await anchors.add(redis_conn, anchor, a, b, c, a, b, a, a, a) == 3
-    assert await anchors.add(redis_conn, anchor, a) == 0
+    await anchors.add(redis_conn, anchor, a, b, c, a, b, a, a, a)
+    await anchors.add(redis_conn, anchor, a)
     members = await anchors.members(redis_conn, anchor)
     assert len(members) == 3
     count = await anchors.count(redis_conn, anchor)
@@ -26,8 +26,8 @@ async def test_add_rem(redis_conn):
     assert await anchors.is_member(redis_conn, anchor, c)
     assert not await anchors.is_member(redis_conn, anchor, d)
 
-    assert await anchors.remove(redis_conn, anchor, d) == 0
-    assert await anchors.remove(redis_conn, anchor, a) == 1
+    await anchors.remove(redis_conn, anchor, d)
+    await anchors.remove(redis_conn, anchor, a)
 
     members = await anchors.members(redis_conn, anchor)
     assert a not in members
@@ -60,14 +60,11 @@ async def test_ops(redis_conn):
     assert c in members
     assert d not in members
 
-    new_members = await anchors.union(redis_conn, ab, abc, store="new_abc")
-    for mem in new_members:
-        assert mem in members
-    assert len(new_members) == len(members)
+    await anchors.unionstore(redis_conn, "new_abc", ab, abc)
     members = await anchors.members(redis_conn, "new_abc")
-    for mem in members:
-        assert mem in new_members
-    assert len(new_members) == len(members)
+    for mem in [a, b, c]:
+        assert mem in members
+    assert len(members) == 3
 
     members = await anchors.intersection(redis_conn, ab, cd)
     assert a not in members
@@ -75,14 +72,9 @@ async def test_ops(redis_conn):
     assert c not in members
     assert d not in members
 
-    new_members = await anchors.intersection(redis_conn, ab, cd, store="new_empty")
-    for mem in new_members:
-        assert mem in members
-    assert len(new_members) == len(members)
+    await anchors.interstore(redis_conn, "new_empty", ab, cd)
     members = await anchors.members(redis_conn, "new_empty")
-    for mem in members:
-        assert mem in new_members
-    assert len(new_members) == len(members)
+    assert len(members) == 0
 
     members = await anchors.intersection(redis_conn, ab, a_alone)
     assert a in members
@@ -94,14 +86,10 @@ async def test_ops(redis_conn):
     assert a not in members
     assert b in members
 
-    new_members = await anchors.difference(redis_conn, ab, a_alone, store="b_alone")
-    for mem in new_members:
-        assert mem in members
-    assert len(new_members) == len(members)
+    await anchors.diffstore(redis_conn, "b_alone", ab, a_alone)
     members = await anchors.members(redis_conn, "b_alone")
-    for mem in members:
-        assert mem in new_members
-    assert len(new_members) == len(members)
+    assert b in members
+    assert len(members) == 1
 
     members = await anchors.difference(redis_conn, a_alone, ab)
     assert len(members) == 0

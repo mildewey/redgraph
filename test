@@ -20,7 +20,7 @@ if [ $unit != 1 ]; then
 fi
 
 echo "Running tests"
-PYTHONPATH=$local_dir/src pytest \
+PYTHONPATH=$local_dir/src pipenv run pytest \
   --cov-report html:$local_dir/test_output \
   --cov=$local_dir/src \
   -o cache_dir=$local_dir/.my_cache_dir \
