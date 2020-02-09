@@ -6,7 +6,7 @@ from typing import Union, List, Mapping
 
 import aioredis
 
-from redgraph.types import Handle, Value, Document, Field, Key
+from redgraph.types import Handle, Value, Field, Key
 
 
 logger = logging.getLogger("redgraph")
@@ -28,7 +28,7 @@ def deserialize(val: str) -> Value:
     return json.loads(val)
 
 
-def extract(entity: Document, *keys: Key) -> Value:
+def extract(entity: Value, *keys: Key) -> Value:
     try:
         return reduce(lambda e, i: e[i], keys, entity)
     except Exception as e:

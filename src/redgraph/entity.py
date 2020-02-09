@@ -23,7 +23,7 @@ from redgraph.types import (
 logger = logging.getLogger("redgraph")
 
 
-def _extract_all(entity: Document, *indices: Key) -> List[bytes]:
+def _extract_all(entity: Value, *indices: Key) -> List[bytes]:
     indexed = []
     for index in indices:
         try:
@@ -36,7 +36,7 @@ def _extract_all(entity: Document, *indices: Key) -> List[bytes]:
 
 
 @awaitable
-def set(conn: Transaction, id: ID, entity: Document, *indices: Key) -> List[Future]:
+def set(conn: Transaction, id: ID, entity: Value, *indices: Key) -> List[Future]:
     indexed = _extract_all(entity, *indices)
 
     return [conn.hmset(id.bytes, handle("entity"), serialize(entity), *indexed)]
@@ -50,7 +50,7 @@ async def read(conn: Connection, id: ID) -> Value:
 
 
 @awaitable
-def replace(conn: Transaction, id: ID, entity: Document, *indices: Key) -> List[Future]:
+def replace(conn: Transaction, id: ID, entity: Value, *indices: Key) -> List[Future]:
     return [*delete(conn, id), *set(conn, id, entity, *indices)]
 
 
