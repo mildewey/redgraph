@@ -16,6 +16,6 @@ Future = asyncio.Future
 Redis = Union[Connection, Transaction]
 
 Key = Union[str, int]
-Primitive = Union[str, bytes, int, float, bool, None]
+Primitive = Union[str, int, float, bool, None]
 Document = Mapping[Key, "Value"]
 Value = Union[Document, List[Union[Document, Primitive]], Primitive]

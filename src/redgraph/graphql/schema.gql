@@ -1,0 +1,93 @@
+type Query {
+    node (id: ID!): Node
+    edge (id: ID!): Edge
+    anchor (name: String!): Anchor!
+    entity (id: ID!): Entity!
+    property (name: String!): Property!
+}
+
+type Mutation {
+    relate (subject: ID!, predicate: ID!, object: ID!): Boolean!
+    unrelate (subject: ID!, predicate: ID!, object: ID!): Boolean!
+
+    anchorAdd (name: String!, members: [ID!]!): Anchor!
+    anchorRemove (name: String!, members: [ID!]!): Anchor!
+    anchorUnion (name: String!, unite: [String!]!, overwrite: Boolean = true): Anchor!
+    anchorIntersection (name: String!, intersect: [String!]!, overwrite: Boolean = true): Anchor!
+    anchorDiff (name: String!, primary: String!, less: [String!]!, overwrite: Boolean = true): Anchor!
+
+    setProperty (property: PropertyInput!, entities: [ID!]!): Property!
+    removeProperty (property: String!, entities: [ID!]!): Property!
+    setEntity (entity: ID!, properties: [PropertyInput!]!): Entity!
+    removeEntity (entity: ID!, properties: [String!]!): Entity!
+}
+
+input PropertyInput {
+    key: String!
+    value: String!
+    deserialize: Boolean = false
+}
+
+interface PropertyOutput {
+    key: String!
+    entity: ID!
+}
+
+type StringProperty implements PropertyOutput {
+    key: String!
+    entity: ID!
+    value: String!
+}
+
+type IntegerProperty implements PropertyOutput {
+    key: String!
+    entity: ID!
+    value: Int!
+}
+
+type FloatProperty implements PropertyOutput {
+    key: String!
+    entity: ID!
+    value: Float!
+}
+
+type BooleanProperty implements PropertyOutput {
+    key: String!
+    entity: ID!
+    value: Boolean
+}
+
+type Entity {
+    id: ID!
+    json(keys: [String!]!): String!
+    properties(keys: [String!]!): [PropertyOutput!]!
+}
+
+type Node {
+    id: ID!
+    entity: Entity!
+    relationships(outgoing: Boolean = true, incoming: Boolean = true): [Edge!]
+    adjacent(outgoing: Boolean = true, incoming: Boolean = true): [Node!]
+    degree: Int!
+}
+
+type Edge {
+    id: ID!
+    entity: Entity!
+    nodes(subjects: Boolean = true, objects: Boolean = true): [Node!]
+    hyperedge: Boolean!
+}
+
+type Anchor {
+    name: String!
+    entities: [Entity!]!
+    membership (entities: [String!]!): [Boolean!]!
+    intersection (intersect: [String!]!): [Entity!]!
+    union (unite: [String!]!): [Entity!]!
+    diff (less: [String!]!): [Entity!]!
+}
+
+type Property {
+    name: String!
+    values (entities: [ID!]!): [PropertyOutput!]!
+}
