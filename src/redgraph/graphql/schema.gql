@@ -66,16 +66,14 @@ type Entity {
 type Node {
     id: ID!
     entity: Entity!
-    relationships(outgoing: Boolean = true, incoming: Boolean = true): [Edge!]
-    adjacent(outgoing: Boolean = true, incoming: Boolean = true): [Node!]
-    degree: Int!
+    relationships(outgoing: Boolean = true, incoming: Boolean = true): [Edge!]!
+    adjacent(outgoing: Boolean = true, incoming: Boolean = true): [Node!]!
 }
 
 type Edge {
     id: ID!
     entity: Entity!
-    nodes(subjects: Boolean = true, objects: Boolean = true): [Node!]
-    hyperedge: Boolean!
+    nodes(subjects: Boolean = true, objects: Boolean = true): [Node!]!
 }
 
 type Anchor {

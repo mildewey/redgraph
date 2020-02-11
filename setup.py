@@ -9,5 +9,5 @@ setup(
     url="https://github.com/mildewey/redgraph",
     packages=["redgraph"],
     package_dir={"": "src"},
-    install_requires=["hiredis", "aioredis", "pydantic",],
+    install_requires=["hiredis", "aioredis", "pydantic", "graphql-core-next"],
 )
